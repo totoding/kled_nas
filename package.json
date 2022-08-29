@@ -1,0 +1,37 @@
+{
+    "name": "nas_server",
+    "version": "1.0.0",
+    "description": "自用nas服务端",
+    "tags": [
+        "orm",
+        "typescript",
+        "koa"
+    ],
+    "scripts": {
+        "start": "nodemon",
+        "build": "rm -rf dist && tsc",
+        "pro": "npx pm2 start ecosystem.config.js --env production",
+        "restart": "pm2 restart ecosystem.config.js --env production",
+        "stop": "npx pm2 stop ecosystem.config.js"
+    },
+    "dependencies": {
+        "dotenv": "^8.2.0",
+        "koa": "^2.7.0",
+        "koa-bodyparser": "^4.2.1",
+        "koa-router": "^7.4.0",
+        "mysql2": "^2.3.3",
+        "reflect-metadata": "^0.1.13",
+        "ts-node": "^10.9.1",
+        "typeorm": "^0.3.9"
+    },
+    "devDependencies": {
+        "@types/koa": "^2.0.48",
+        "@types/koa-bodyparser": "^4.2.2",
+        "@types/koa-router": "^7.0.40",
+        "@types/node": "^12.20.55",
+        "nodemon": "^1.19.0",
+        "pm2": "^3.5.0",
+        "tsconfig-paths": "^3.8.0",
+        "typescript": "^3.4.5"
+    }
+}
