@@ -15,7 +15,10 @@
         "stop": "npx pm2 stop ecosystem.config.js"
     },
     "dependencies": {
+        "class-transformer": "^0.5.1",
+        "class-validator": "^0.13.2",
         "dotenv": "^8.2.0",
+        "jsonwebtoken": "^8.5.1",
         "koa": "^2.7.0",
         "koa-bodyparser": "^4.2.1",
         "koa-router": "^7.4.0",

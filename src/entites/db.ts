@@ -1,8 +1,7 @@
 
 import { DataSource } from "typeorm"
 import databaseInfo from './dbconfig'
-
-import { Test } from './test'
+import entities from './index'
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -13,7 +12,7 @@ export const AppDataSource = new DataSource({
   password: databaseInfo.password,
   synchronize: true,
   logging: true,
-  entities: [Test]
+  entities
 })
 
 AppDataSource.initialize()
