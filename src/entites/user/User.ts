@@ -1,7 +1,7 @@
 import { Type } from "class-transformer";
 import { IsNotEmpty } from "class-validator";
 import { Common } from "src/utils/common";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, Like, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { AppDataSource } from "../db";
 
 interface UserParams extends Common{
@@ -49,10 +49,18 @@ export class User extends Common{
       .insert({ userName, nickName, password, avatar })
   }
 
-  static async find() {
-    const userRespository = AppDataSource.getRepository(this)
-    return await userRespository.findAndCount()
-  }
-
+  static getUsersBySearchCondition(condition: any): Promise<[User[], number]> {
+		const where: any[] = []
+		if (condition.keywords) {
+			const nickName = Like(`%${condition.keywords}%`)
+			where.push({ nickName })
+		}
+		return AppDataSource.getRepository(this).findAndCount({
+			select: ["id", "nickName"],
+			where,
+			skip: (condition.page - 1) * condition.limit,
+			take: condition.limit,
+		})
+	}
 
 }
