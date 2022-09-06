@@ -3,3 +3,5 @@ dist
 yarn.lock
 package.json.lock
 dbconfig.ts
+src/tmp
+src/test
