@@ -5,4 +5,4 @@ package.json.lock
 dbconfig.ts
 /src/tmp
 /src/test
-/src/entites/dbconfig.ts
+/src/entites/dbconfig.ts/
