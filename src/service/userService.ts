@@ -7,7 +7,7 @@ import { User } from '../entites/user/User';
 export default class UserService extends Common {
 
   static async getAllUser() {
-    return await User.find()
+    
   }
 
   static async addUser(ctx: Context) {

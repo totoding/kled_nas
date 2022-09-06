@@ -1,3 +1,4 @@
 import userRoute from './userRoute';
+import fileRoute from './fileRoute';
 
-export default [...userRoute]
+export default [...userRoute, ...fileRoute] 

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+
+  </style>
+  <script src="https://cdn.bootcdn.net/ajax/libs/spark-md5/3.0.2/spark-md5.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.27.2/axios.js"></script>
+</head>
+
+<body>
+  <input type="file" onchange="change()" id="file" />
+  <Button type="button" onclick="upload()">
+    上传
+  </Button>
+
+  <script>
+
+    function makeMd5(buffer) {
+      const spark = new SparkMD5.ArrayBuffer()
+      spark.append(buffer)
+      const hash = spark.end()
+      return hash
+    }
+
+    function fileParse(file) {
+      return new Promise((resolve) => {
+        const fileRead = new FileReader()
+        fileRead.readAsArrayBuffer(file)
+        fileRead.onload = (ev) => {
+          resolve(ev.target.result)
+        }
+      })
+    }
+
+    function change() {
+      const f = document.getElementById("file")
+      const file = f.files[0];
+      creatChunkFile(file)
+        .then(list => {
+          const chunk = list[3]
+          console.log(chunk)
+          let formData = new FormData()
+          console.log(file)
+          formData.append("chunk", chunk.chunk)
+          formData.append("file", chunk.filename)
+          axios.post("http://localhost:3000/file/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data"}
+          })
+        })
+    }
+
+    async function creatChunkFile(file) {
+      if (!file) return
+      const buff = await fileParse(file)
+      const hash = makeMd5(buff)
+      const suffix = /\.([0-9a-zA-Z]+)$/i.exec(file.name)[1]  // 获取文件名后缀
+      const list = []
+      const count = Math.ceil(file.size / 1024000 * 2)  // SIZE指的是规定每一片数据的大小
+      const partSize = file.size / count  // 时间上每片数据的大小
+      let cur = 0;
+      for (let i = 0; i < count; i++) {
+        let item = {
+          chunk: file.slice(cur, cur + partSize),
+          filename: `${hash}_${i}.${suffix}`,   // 每片文件的名称以MD5_索引值的方式
+        }
+        cur += partSize
+        list.push(item)
+      }
+      return list
+    }
+
+  </script>
+</body>
+
+</html>
