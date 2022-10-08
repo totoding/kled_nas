@@ -43,7 +43,7 @@
       const file = f.files[0];
       creatChunkFile(file)
         .then(list => {
-          const chunk = list[3]
+          const chunk = list[0]
           console.log(chunk)
           let formData = new FormData()
           console.log(file)

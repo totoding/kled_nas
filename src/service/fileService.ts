@@ -1,16 +1,19 @@
 
 import { promises as fs, createReadStream, createWriteStream } from 'fs'
 import * as path from 'path'
-import * as SparkMD5 from 'spark-md5'
+
 const TEMP_PATH = path.join(path.resolve(), "src/tmp")
+const STATIC_PATH = path.join(path.resolve(), "src/static")
+
 export class FileService {
 
   /**
-   * 检查临时目标路径/文件是否存在
+   * 检查目标路径/文件是否存在
    * @param src 
+   * @param isTemp 是否为临时文件
    */
-  static async checkTempFileExist(src: string) {
-    const fullPath = path.join(TEMP_PATH, src)
+  static async checkFileExist(src: string, isTemp = true) {
+    const fullPath = isTemp ? path.join(TEMP_PATH, src) : path.join(STATIC_PATH, src)
     try {
       await fs.access(fullPath)
       return fullPath
@@ -18,18 +21,25 @@ export class FileService {
       return null
     }
   }
-
+  // 创建文件夹
   static async mkdir(src: string) {
     try {
-      const fullsrc = path.join(path.resolve(), "src/tmp", src)
-      const result = await fs.mkdir(fullsrc, { recursive: true })
-      return result as unknown as string | undefined || fullsrc
+      const result = await fs.mkdir(src, { recursive: true })
+      return result as unknown as string | undefined || src
+    } catch (error) {
+      return error
+    }
+  }
+  // 删除文件夹（待改进）
+  static async deleteFile(src) {
+    try {
+      return await fs.rmdir(src, { recursive: true })
     } catch (error) {
       return error
     }
   }
   /**
-   * 添加临时文件切片
+   * 添加单个临时文件切片
    * @param chunk 
    * @param filename
    * @param force 强制删除所有重新上传 
@@ -38,12 +48,12 @@ export class FileService {
     // 判断是否存在临时文件夹 不存在且suffix为0则创建文件夹
     const [hash, suffix] = filename.split('_')
     const index = suffix.split(".")[0]
-    let existPath = await this.checkTempFileExist(hash)
+    let existPath = await this.checkFileExist(hash)
     if (!existPath && index === "0") {
-      existPath = await this.mkdir(hash)
+      existPath = await this.mkdir(path.join(TEMP_PATH,hash))
     }
     const fullPath = existPath + "/" + filename
-    const existFile = await this.checkTempFileExist(hash + "/" + filename)
+    const existFile = await this.checkFileExist(hash + "/" + filename)
     if (existFile) {
       return {
         code: 2,
@@ -71,9 +81,15 @@ export class FileService {
       })
     })
   }
-
-  static async mergeChunk(hash: string) {
+  // 合并切片
+  static async mergeChunk(hash: string, type = "common") {
     const fullPath = path.join(TEMP_PATH, hash)
+    if (!await this.checkFileExist(hash)) {
+      return {
+        code: 0,
+        msg: "合并失败， 未找到临时文件"
+      }
+    }
     const chunkList = await fs.readdir(fullPath)
     const sortedChunklist = chunkList.sort((a, b) => {
       let reg = /_(\d+)/
@@ -82,7 +98,7 @@ export class FileService {
     for (const item of sortedChunklist) {
       const suffix = /\.([0-9a-zA-Z]+)$/.exec(item)[1] || null
       const data = await fs.readFile(`${fullPath}/${item}`)
-      await fs.appendFile(`${path.join(__dirname, '../test/a/')}${hash}.${suffix}`, data)
+      await fs.appendFile(`${path.join(STATIC_PATH, `/${type}/`)}${hash}.${suffix}`, data)
       if (item === sortedChunklist[sortedChunklist.length - 1]) {
         try {
           await fs.access(`${path.join(__dirname, '../test/a/')}${hash}.${suffix}`)
@@ -96,18 +112,17 @@ export class FileService {
     return { code: 0, message: "合并失败" }
   }
 
-  static async deleteFile(src) {
-    console.log(src, 1)
-    try {
-      const data = await fs.rmdir(src, { recursive: true })
-      console.log(data)
-      return data
-    } catch (error) {
-      return error
+  // 查询某临时文件已上传多少切片
+  static async searchUploadedIndex(hash: string) {
+    if (!await this.checkFileExist(hash)){
+      return { code: 2, count: 0 }
     }
+    const fullPath = path.join(TEMP_PATH, hash)
+    const list = await fs.readdir(fullPath)
+    return { code: 1, count: list.length }
   }
 }
 
+FileService.searchUploadedIndex("1d62766e7d1b66d006959851b33579f8")
+.then(r => console.log(r))
 
-FileService.mergeChunk("13859e941b5254a9c0d0cf999d314f8b")
-  .then(r => console.log(r))
